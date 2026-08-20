@@ -4,11 +4,11 @@ on:
   schedule:
     # Hafta içi her gün TSİ 18:15'te çalışır (UTC 15:15)
     - cron: '15 15 * * 1-5'
-  workflow_dispatch: # Elle tetikleme butonu ekler
+  workflow_dispatch: # Elle tetikleme butonu
 
 jobs:
   run-bot:
-    runs-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Kodları Çek
         uses: actions/checkout@v3
