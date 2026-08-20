@@ -5,20 +5,26 @@ import yfinance as yf
 import requests
 from datetime import datetime
 
-# Şifreleri GitHub Secrets üzerinden güvenli alır
+# Şifreleri GitHub Secrets üzerinden alır
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
+# 💰 TEMETTÜ FAVORİLERİ
 TEMETTU_FAVORILER = [
     "EREGL.IS", "TUPRS.IS", "FROTO.IS", "SISE.IS", 
     "BIMAS.IS", "TOASO.IS", "TTRAK.IS", "TCELL.IS"
 ]
 
-BIST100_ORNEK = [
-    "THYAO.IS", "ASELS.IS", "KCHOL.IS", "GARAN.IS", "AKBNK.IS", "SAHOL.IS"
+# 📈 GENİŞ BIST & FIRSAT HİSSELERİ LİSTESİ
+BIST100_GENIS = [
+    "THYAO.IS", "ASELS.IS", "KCHOL.IS", "GARAN.IS", "AKBNK.IS", "SAHOL.IS",
+    "YKBNK.IS", "ISCTR.IS", "VAKBN.IS", "PGSUS.IS", "MGROS.IS", "CCHOL.IS",
+    "ENKAI.IS", "ALARK.IS", "ASTOR.IS", "SASA.IS",  "HEKTAS.IS", "OYAKC.IS",
+    "KRDMD.IS", "PETKM.IS", "TAVHL.IS", "KOZAL.IS", "EKGYO.IS", "GUBRF.IS",
+    "BRSAN.IS", "KONTR.IS", "REEDR.IS"
 ]
 
-ALL_TICKERS = list(set(TEMETTU_FAVORILER + BIST100_ORNEK))
+ALL_TICKERS = list(set(TEMETTU_FAVORILER + BIST100_GENIS))
 
 def send_telegram_message(message):
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
@@ -83,7 +89,8 @@ def calculate_indicators(df):
     }
 
 def analyze():
-    msg = f"📊 *BIST BULUT TARAMA RAPORU*\n📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+    msg = f"📊 *BIST FIRSAT & TEMETTÜ TARAMASI*\n📅 {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+    msg += f"🔍 Taranan Hacimli Hisse Sayısı: {len(ALL_TICKERS)}\n"
     msg += "-----------------------------------\n\n"
 
     xu100 = get_data("XU100.IS")
@@ -93,7 +100,7 @@ def analyze():
         e20 = c.ewm(span=20, adjust=False).mean().iloc[-1]
         if c.iloc[-1] < e20:
             market_safe = False
-            msg += "⚠️ *UYARI:* BIST 100 Endeksi 20 günlük ortalamanın altında!\n\n"
+            msg += "⚠️ *UYARI:* BIST 100 Endeksi 20 günlük ortalamanın altında! Temkinli olun.\n\n"
 
     results = []
 
@@ -122,13 +129,14 @@ def analyze():
         if score >= 80: status = "🔥 GÜÇLÜ SİNYAL"
         elif score >= 65: status = "🟢 GÜÇLENİYOR"
 
+        # Yalnızca 60 ve üzeri skora sahip (fırsat veren) hisseler Telegram'a atılır
         if score >= 60:
             results.append(f"{tag} *{symbol}*\nFiyat: {round(ind['price'], 2)} TL | Skor: {score}/100\nDurum: {status} | Risk: {risk}\n")
 
     if results:
         msg += "\n".join(results)
     else:
-        msg += "Bugün yüksek skorlu güçlü sinyal veren hisse bulunamadı."
+        msg += "Bugün yüksek teknik skorlu (60+) fırsat veren hisse bulunamadı."
 
     send_telegram_message(msg)
 
